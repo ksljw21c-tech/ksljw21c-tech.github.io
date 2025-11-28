@@ -1,6 +1,6 @@
 ---
 title: '블로그에 오신 것을 환영합니다!'
-date: 2025-01-26
+date: 2025-11-28
 tags: ['환영', '블로그', '시작하기']
 category: '공지사항'
 description: '첫 번째 게시글입니다. 블로그 사용법을 알아봅니다.'
@@ -94,7 +94,7 @@ print(fibonacci(10))
 ```yaml
 ---
 title: '글 제목'
-date: 2025-01-26
+date: 2025-11-28
 tags: ['태그1', '태그2']
 category: '카테고리'
 description: '글 설명'

@@ -1,6 +1,6 @@
 ---
 title: 'AI 도구 활용 교육의 최신 트렌드와 이슈: GPT, Gemini, Cursor를 넘어서'
-date: 2025-01-26
+date: 2025-11-28
 tags: ['AI교육', '프롬프트엔지니어링', 'AI리터러시', 'ChatGPT', 'Gemini', 'Cursor']
 category: 'AI/교육'
 description: '2025년 AI 도구 활용 교육의 최신 트렌드와 이슈를 분석하고, 효과적인 학습 방법과 실전 활용 전략을 제시합니다.'
