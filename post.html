@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 - ksljw21c-tech 블로그</title>
+    <meta name="description" content="ksljw21c-tech의 기술 블로그">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/prism.css">
+    
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Prism.js for code highlighting -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-json.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-markdown.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-yaml.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-css.min.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">📝</span>
+                    <span class="logo-text">ksljw21c-tech</span>
+                </a>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link">← 목록으로</a>
+                    <button id="theme-toggle" class="theme-toggle" aria-label="테마 변경">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Post Header -->
+            <article class="post-article">
+                <header class="post-header">
+                    <h1 id="post-title" class="post-title">로딩 중...</h1>
+                    <div class="post-meta">
+                        <span id="post-date" class="post-date"></span>
+                        <span id="post-category" class="post-category"></span>
+                    </div>
+                    <div id="post-tags" class="post-tags">
+                        <!-- Tags will be dynamically inserted here -->
+                    </div>
+                </header>
+
+                <!-- Post Content -->
+                <div id="post-content" class="post-content">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>게시글을 불러오는 중...</p>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Comments Section (Giscus) -->
+            <section class="comments-section">
+                <h2 class="comments-title">💬 댓글</h2>
+                <div id="giscus-container" class="giscus"></div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2025 ksljw21c-tech. All rights reserved.</p>
+            <p class="footer-links">
+                <a href="https://github.com/ksljw21c-tech" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/theme.js"></script>
+    <script src="js/post-loader.js"></script>
+</body>
+</html>
+
