@@ -1,6 +1,6 @@
 ---
 title: '캐러셀/슬라이더 디자인 Best Practice'
-date: 2025-11-28
+date: 2025-11-29
 tags: ['UX', 'UI', '캐러셀', '슬라이더', '배너', '상품이미지']
 category: '디자인'
 description: '메인 배너와 상품 이미지를 효과적으로 보여주는 캐러셀/슬라이더 디자인 Best Practice를 완벽하게 정리합니다.'

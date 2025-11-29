@@ -1,6 +1,6 @@
 ---
 title: 'GNB, LNB, SNB, FNB 완벽 정리'
-date: 2025-11-28
+date: 2025-11-29
 tags: ['웹디자인', 'UX', '내비게이션', 'GNB', 'LNB', 'SNB', 'FNB']
 category: '디자인'
 description: '4가지 내비게이션 바의 차이점과 활용법을 완벽하게 정리한 웹사이트 내비게이션 가이드입니다.'
