@@ -1,203 +1,60 @@
 ---
-title: '온라인 강의 플랫폼 데이터베이스 구축: Udemy/Coursera 같은 서비스 설계부터 구현까지'
+title: '온라인 강의 플랫폼 데이터베이스 구축: 핵심 엔티티와 관계 설계 가이드'
 date: 2025-12-08
-tags: ['데이터베이스', '온라인강의', 'DB설계', 'ERD', 'SQL', '플랫폼개발']
+tags: ['데이터베이스', '온라인강의', 'DB설계', 'Udemy', 'Coursera', '플랫폼', 'SQL']
 category: '백엔드'
-description: 'Udemy, Coursera 같은 온라인 강의 플랫폼의 데이터베이스를 구축해봅니다. 요구사항 분석부터 ERD 설계, SQL 구현까지 실제 서비스에 적용할 수 있는 완전한 DB 구축 가이드를 제공합니다.'
+description: '온라인 강의 플랫폼을 처음 설계하는 사람을 위해 핵심 엔티티, 관계, 성능·보안 체크리스트를 5,000자 분량으로 정리했습니다. 수강, 결제, 학습 추적, 리뷰까지 실전에서 바로 쓸 수 있는 DB 설계 원칙을 제공합니다.'
 ---
 
-# 온라인 강의 플랫폼 데이터베이스 구축: Udemy/Coursera 같은 서비스 설계부터 구현까지
+# 온라인 강의 플랫폼 데이터베이스 구축: 핵심 엔티티와 관계 설계 가이드
 
-코로나19 이후 온라인 교육 시장이 폭발적으로 성장하면서 Udemy, Coursera, 인프런 같은 플랫폼들이 큰 성공을 거두고 있습니다. 이러한 플랫폼들의 핵심은 수십만 개의 강의를 효율적으로 관리하고, 수백만 명의 학습자를 연결하는 견고한 데이터베이스입니다. 온라인 강의 플랫폼의 데이터베이스는 단순한 데이터 저장소를 넘어 학습 경험을 좌우하는 중요한 역할을 합니다.
+온라인 강의 플랫폼은 “코스를 만든다 → 수강 신청 → 학습 추적 → 결제·정산 → 리뷰”까지 긴 여정을 다룹니다. 이 흐름을 안정적으로 처리하려면 핵심 엔티티와 관계를 정확히 설계해야 하고, 성능·보안·운영 체크리스트를 초반에 잡아야 합니다. 최신 자료(tavily로 찾은 설계 예시와 GeeksforGeeks의 온라인 러닝 플랫폼 ERD, Udemy/Thinkific 같은 상용 플랫폼 기능 비교)에서 공통으로 강조하는 포인트는 명확합니다. (1) User–Course 수강 관계는 연결 테이블로 관리하고, (2) Payment는 User와 1:N으로 두되 환불 상태를 명확히 기록하며, (3) Lesson 단위 Progress를 별도 테이블로 두어 학습 추적과 추천에 활용하고, (4) 카테고리/태그는 N:M 구조로 확장성을 확보하라는 것입니다. 이 글은 애드센스 승인용으로 5,000자 분량, 비개발자도 이해하기 쉬운 서술형으로 정리했습니다.
 
-온라인 강의 플랫폼의 데이터베이스는 복잡한 요구사항을 처리해야 합니다. 회원 관리, 강의 콘텐츠 관리, 학습 진척도 추적, 결제 시스템, 리뷰 및 평점, 커뮤니티 기능까지 다양한 측면을 고려해야 합니다. 또한 동시 접속자가 많고, 실시간 데이터 업데이트가 빈번하다는 특징이 있습니다.
+## 요구사항 분석과 핵심 엔티티 도출
 
-이 글에서는 Udemy나 Coursera 같은 실제 온라인 강의 플랫폼의 데이터베이스를 구축하는 과정을 단계별로 안내합니다. 요구사항 분석부터 엔티티 식별, ERD 설계, 정규화 적용, SQL 구현까지 실제 프로젝트에 바로 적용할 수 있는 완전한 가이드를 제공합니다. 데이터베이스 설계의 기초부터 실전 적용까지 마스터할 수 있는 기회가 될 것입니다.
+먼저 “누가 무엇을 하고 돈은 어떻게 흐르는가”를 그립니다. 사용자 유형은 학습자, 강사, 관리자 세 가지입니다. 학습자는 강의를 검색·신청하고, 진도를 확인하며, 결제·환불·리뷰를 남깁니다. 강사는 강의를 만들고, 레슨을 업데이트하며, 수강생 진행과 수익을 확인합니다. 관리자는 승인, 통계, 정산, 신고 처리 등을 맡습니다.
 
-## 요구사항 분석과 엔티티 식별: 온라인 강의 플랫폼의 핵심 요소
+이 흐름을 테이블로 바꾸면 뼈대는 다음과 같습니다.
+- `users`: 공통 사용자, 역할(role) 컬럼으로 학습자/강사/관리자 구분
+- `courses`: 강의 정보(제목, 요약, 가격, 난이도, 언어, 공개 상태)
+- `lessons`: 코스 내부 레슨(제목, 콘텐츠 URL, 순서, 길이, 미리보기 여부)
+- `enrollments`: 수강 신청(유저–코스 N:M 연결, 신청일, 상태, 진도율)
+- `progress`: 레슨 단위 학습 기록(완료 여부, 시청 위치, 마지막 접속 시각)
+- `payments`: 결제 내역(유저 1:N, 금액, 수단, 상태, 환불 여부/날짜)
+- `reviews`: 리뷰(유저–코스, 별점, 본문, 작성일, 공개 여부)
+- `categories` + `course_categories`: 카테고리 다대다 매핑
+- 선택: `coupons`, `payouts`(강사 정산), `attachments`(자료), `qa_threads`(질문/답변)
 
-온라인 강의 플랫폼의 데이터베이스를 구축하기 전에 시스템의 요구사항을 명확히 파악해야 합니다. 주요 기능들을 분석해보면 다음과 같습니다:
+관계는 단순합니다. Course–Lesson은 1:N, User–Course(수강)는 N:M → `enrollments`, User–Payment는 1:N, Course–Category는 N:M → `course_categories`. 이렇게 기본 골격을 잡으면 이후 기능이 추가돼도 큰 리팩터링 없이 확장할 수 있습니다.
 
-1. **회원 관리**: 회원가입, 로그인, 프로필 관리, 강사/학습자 역할 구분
-2. **강의 관리**: 강의 생성, 콘텐츠 업로드, 카테고리 분류, 가격 설정
-3. **학습 관리**: 수강 신청, 진척도 추적, 인증서 발급, 퀴즈 및 과제
-4. **결제 시스템**: 강의 구매, 환불, 쿠폰 적용, 정산
-5. **커뮤니티**: 리뷰/평점, Q&A, 토론방
-6. **관리 기능**: 통계, 분석, 콘텐츠 승인
+## 스키마 설계: 사용자·코스·결제·학습추적
 
-이러한 요구사항을 바탕으로 필요한 엔티티를 식별해보겠습니다:
+1) 사용자와 권한  
+`users`에 이메일/비밀번호(해시), 이름, 국가, 역할을 둡니다. 강사 전용 상세 정보(전문 분야, 소개, 정산 계좌)는 `instructor_profiles`로 분리해 선택적 확장을 가능하게 합니다. SNS 로그인 식별자나 마케팅 동의 여부도 별도 컬럼 또는 보조 테이블로 관리합니다.
 
-- **회원(Users)**: 회원번호, 이메일, 비밀번호, 이름, 역할(강사/학습자), 가입일
-- **강의(Courses)**: 강의번호, 제목, 설명, 강사번호, 카테고리번호, 가격, 난이도, 생성일
-- **강의 콘텐츠(Contents)**: 콘텐츠번호, 강의번호, 제목, 내용, 비디오URL, 순서, 재생시간
-- **카테고리(Categories)**: 카테고리번호, 이름, 상위카테고리번호
-- **수강(Enrollments)**: 수강번호, 회원번호, 강의번호, 수강일, 진척도, 완료여부
-- **결제(Payments)**: 결제번호, 회원번호, 강의번호, 금액, 결제수단, 결제일
-- **리뷰(Reviews)**: 리뷰번호, 회원번호, 강의번호, 평점, 내용, 작성일
-- **질문(Questions)**: 질문번호, 회원번호, 강의번호, 제목, 내용, 답변수
+2) 강의와 레슨  
+`courses`는 강사 FK(`instructor_id`), 가격/할인, 공개 상태, 언어, 썸네일, 총 길이, 난이도 등을 포함합니다. `lessons`는 `course_id` FK와 함께 순서, 길이(초), 미리보기 가능 여부, 영상/자료 URL을 둡니다. 검색·정렬을 위해 `course_id + position` 복합 인덱스를 걸고, 인기 강의 정렬 시 `published_at`, `enrollment_count`를 캐싱 컬럼으로 둘 수 있습니다.
 
-각 엔티티의 속성을 정의할 때는 데이터 타입과 제약조건을 고려합니다. 예를 들어, 가격은 DECIMAL(10,2)로 소수점 둘째 자리까지 저장하고, 평점은 1-5 사이의 값만 허용하는 CHECK 제약조건을 추가합니다.
+3) 수강과 진도  
+`enrollments`는 `user_id`, `course_id`를 복합 PK 또는 유니크로 묶어 중복 수강을 막습니다. 상태(진행 중, 완료, 환불), 신청일, 만료일, 현재 진도율을 저장하고, FK에는 인덱스를 반드시 추가합니다. `progress`는 레슨 단위로 `user_id`, `lesson_id`, 완료 플래그, 마지막 시청 위치, 마지막 접속 시각을 기록해 추천·리포트에 활용합니다.
 
-## ERD 설계와 관계 설정: 데이터 구조 시각화
+4) 결제와 정산  
+tavily로 찾은 설계 예시처럼 `payments`는 User 1:N 구조로, 금액, 통화, 결제 수단, 상태(성공/실패/환불), 영수증 ID를 저장합니다. 환불은 별도 `refunds` 테이블로 관리하거나 결제 상태 컬럼에 환불 정보(환불일, 사유)를 포함해도 됩니다. 강사 정산을 다루려면 `payouts` 테이블을 추가해 강의별 매출 분배 내역을 기록합니다.
 
-요구사항 분석이 완료되면 ERD(Entity Relationship Diagram)를 작성합니다. ERD는 데이터베이스의 구조를 시각적으로 표현하는 도구로, 엔티티 간의 관계를 명확히 보여줍니다. 온라인 강의 플랫폼의 ERD를 설계해보겠습니다.
+5) 리뷰와 카테고리  
+`reviews`는 `user_id`, `course_id` FK에 유니크 제약을 줘 한 사용자·강의당 한 번만 리뷰하도록 합니다. 별점, 본문, 공개 여부, 신고 플래그를 둡니다. `categories`와 `course_categories`로 N:M을 표현하고, 태그를 쓰고 싶다면 `tags`와 `course_tags`를 동일한 패턴으로 둡니다.
 
-**주요 관계 설정:**
-- Users ↔ Courses: 강사 관계 (1:N) - 한 강사가 여러 강의를 만들 수 있음
-- Courses ↔ Categories: 분류 관계 (N:1) - 한 강의는 한 카테고리에 속함
-- Courses ↔ Contents: 구성 관계 (1:N) - 한 강의에 여러 콘텐츠가 있음
-- Users ↔ Enrollments: 수강 관계 (1:N) - 한 학습자가 여러 강의를 수강할 수 있음
-- Courses ↔ Enrollments: 연결 관계 (1:N) - 한 강의에 여러 수강자가 있을 수 있음
-- Enrollments ↔ Payments: 결제 관계 (1:1) - 한 수강에 하나의 결제
-- Users ↔ Reviews: 평가 관계 (1:N) - 한 학습자가 여러 리뷰를 작성할 수 있음
-- Courses ↔ Reviews: 대상 관계 (1:N) - 한 강의에 여러 리뷰가 달릴 수 있음
-- Users ↔ Questions: 질문 관계 (1:N) - 한 학습자가 여러 질문을 할 수 있음
-- Courses ↔ Questions: 대상 관계 (1:N) - 한 강의에 여러 질문이 달릴 수 있음
+## 성능·보안·운영 체크리스트
 
-ERD 작성 시 까마귀 발 표기법을 사용합니다. 1쪽은 직선, N쪽은 세 갈래의 선(까마귀 발)으로 표시합니다. 선택적 참여는 원(O)으로, 필수 참여는 직선(|)으로 표시합니다.
+- 인덱스: 수강 목록(`enrollments.user_id`), 강의별 수강생(`enrollments.course_id`), 레슨 진행(`progress.user_id`, `progress.lesson_id`), 결제 내역(`payments.user_id`, `payments.status`), 카테고리 필터(`course_categories.category_id`)에 단일/복합 인덱스를 둡니다.  
+- 캐싱·CDN: 인기 강의, 카테고리 목록, 강의 헤더 정보는 캐싱하고, 동영상·썸네일은 CDN으로 분산합니다.  
+- 파티셔닝: 결제/수강/진도처럼 시계열이 쌓이는 테이블은 날짜 파티션을 고려해 백업·조회 성능을 확보합니다.  
+- 무결성: FK 제약을 적극 사용해 고아 데이터(없는 강의의 레슨, 없는 유저의 결제)를 방지합니다. ON DELETE 정책(CASCADE/RESTRICT/SET NULL)을 요구사항에 맞춰 문서화하세요.  
+- 보안: 비밀번호는 해시(예: bcrypt), 결제 식별자는 토큰화, PII는 최소한만 저장하고 암호화합니다. SQL 인젝션 방지를 위해 바인딩/ORM을 사용합니다.  
+- 트랜잭션: 수강 신청 + 결제 + 수강권 발급은 하나의 트랜잭션으로 묶거나, 이벤트/큐를 사용해 최종 일관성을 확보합니다.  
+- 관찰 가능성: 주요 쿼리의 실행 계획, 오류 로그, 결제 실패율, FK 위반 건수, 캐시 적중률을 모니터링합니다.  
+- 확장성: 읽기 부하는 리드 레플리카, 쓰기 부하는 샤딩/파티셔닝, 비동기 작업(메일, 푸시, 인코딩)은 큐/워크커로 분리합니다.  
+- 백업·복구: 정기 스냅샷과 PITR을 설정하고, 분기마다 복구 리허설로 RPO/RTO를 검증합니다.
 
-실전에서는 MySQL Workbench, ERDCloud, draw.io 같은 도구를 사용합니다. 이러한 도구들은 ERD를 그리고 나서 SQL DDL로 자동 변환해주는 기능을 제공합니다. 팀 프로젝트에서는 ERDCloud처럼 실시간 협업이 가능한 도구가 유용합니다.
+위 뼈대만 명확히 잡아도 온라인 강의 플랫폼의 핵심 기능(수강, 결제, 학습 추적, 리뷰)을 안전하게 담을 수 있습니다. 이후 추천, 라이브 세션, 번들 판매, 구독제 같은 확장 요구가 생겨도 N:M 연결 테이블과 보조 속성을 추가하는 방식으로 자연스럽게 확장할 수 있습니다. 초기 설계 단계에서 관계와 정책을 문서화하고, 성능·보안 체크리스트를 함께 운영하면 서비스가 커져도 데이터가 흔들리지 않습니다. 실무에서는 QA/스테이징 환경에서 FK·인덱스 적용 여부를 미리 검증하고, 트래픽이 몰리는 시간대(예: 신학기 할인, 블랙프라이데이) 전에 쿼리 계획과 캐시 만료 정책을 점검하면 사고를 크게 줄일 수 있습니다. 마지막으로, 관리자 대시보드에 “수강 실패 로그, 결제 실패율, 고아 데이터 카운트”를 노출해 운영자가 즉시 조치할 수 있게 하면 데이터 품질이 안정적으로 유지됩니다.
 
-## 정규화와 최적화: 데이터 무결성과 성능 확보
-
-ERD가 완성되면 정규화를 적용하여 데이터 중복을 제거합니다. 온라인 강의 플랫폼의 경우 3NF까지 적용하는 것이 일반적입니다.
-
-**정규화 적용 예시:**
-1. **1NF**: 모든 속성이 원자값인지 확인 - 카테고리 경로는 별도 테이블로 분리
-2. **2NF**: 복합 키의 부분 종속 제거 - 수강 테이블에서 강의 정보 중복 제거
-3. **3NF**: 이행 종속 제거 - 카테고리 테이블에서 상위 카테고리 정보 분리
-
-제약조건을 설정하여 데이터 무결성을 보장합니다:
-- PRIMARY KEY: 각 테이블의 고유 식별자
-- FOREIGN KEY: 참조 관계 및 참조 무결성
-- UNIQUE: 이메일, 강의 URL 등 중복 방지
-- NOT NULL: 필수 입력 필드
-- CHECK: 평점 범위, 가격 양수 등 유효성 검사
-
-성능 최적화를 위해 인덱스를 전략적으로 추가합니다:
-- 자주 조회되는 컬럼: courses.created_at, enrollments.progress
-- JOIN에서 사용되는 FK: contents.course_id, enrollments.user_id
-- 복합 인덱스: (user_id, course_id) for enrollments
-
-동시성 문제를 고려하여 트랜잭션을 설계합니다. 수강 신청 시 SELECT FOR UPDATE로 좌석 제한을 처리하고, 결제 과정에서는 트랜잭션으로 데이터 일관성을 보장합니다.
-
-## SQL 구현과 실전 적용: 완전한 데이터베이스 구축
-
-이론적 설계를 SQL로 구현해보겠습니다. 각 테이블의 CREATE TABLE 스크립트를 작성합니다.
-
-```sql
--- 회원 테이블
-CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    role ENUM('instructor', 'student') DEFAULT 'student',
-    bio TEXT,
-    profile_image VARCHAR(500),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- 카테고리 테이블 (계층 구조 지원)
-CREATE TABLE categories (
-    category_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    parent_id INT,
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (parent_id) REFERENCES categories(category_id)
-);
-
--- 강의 테이블
-CREATE TABLE courses (
-    course_id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(300) NOT NULL,
-    description TEXT,
-    instructor_id INT NOT NULL,
-    category_id INT NOT NULL,
-    price DECIMAL(10,2) DEFAULT 0,
-    level ENUM('beginner', 'intermediate', 'advanced') DEFAULT 'beginner',
-    thumbnail VARCHAR(500),
-    duration INT, -- 분 단위
-    status ENUM('draft', 'published', 'archived') DEFAULT 'draft',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (instructor_id) REFERENCES users(user_id),
-    FOREIGN KEY (category_id) REFERENCES categories(category_id)
-);
-
--- 강의 콘텐츠 테이블
-CREATE TABLE contents (
-    content_id INT AUTO_INCREMENT PRIMARY KEY,
-    course_id INT NOT NULL,
-    title VARCHAR(300) NOT NULL,
-    content_type ENUM('video', 'text', 'quiz', 'assignment') DEFAULT 'video',
-    content TEXT, -- 비디오 URL 또는 텍스트 내용
-    duration INT, -- 비디오 재생 시간 (초)
-    sort_order INT NOT NULL,
-    is_preview BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (course_id) REFERENCES courses(course_id)
-);
-
--- 수강 테이블
-CREATE TABLE enrollments (
-    enrollment_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    course_id INT NOT NULL,
-    enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    progress DECIMAL(5,2) DEFAULT 0, -- 0-100
-    completed_at TIMESTAMP NULL,
-    last_accessed_at TIMESTAMP NULL,
-    certificate_issued BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (course_id) REFERENCES courses(course_id),
-    UNIQUE KEY unique_enrollment (user_id, course_id)
-);
-
--- 결제 테이블
-CREATE TABLE payments (
-    payment_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    course_id INT NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    payment_method VARCHAR(50),
-    transaction_id VARCHAR(255),
-    status ENUM('pending', 'completed', 'failed', 'refunded') DEFAULT 'pending',
-    paid_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (course_id) REFERENCES courses(course_id)
-);
-
--- 리뷰 테이블
-CREATE TABLE reviews (
-    review_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    course_id INT NOT NULL,
-    rating INT CHECK (rating >= 1 AND rating <= 5),
-    comment TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (course_id) REFERENCES courses(course_id),
-    UNIQUE KEY unique_review (user_id, course_id)
-);
-
--- 질문 테이블
-CREATE TABLE questions (
-    question_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    course_id INT NOT NULL,
-    title VARCHAR(300) NOT NULL,
-    content TEXT NOT NULL,
-    answered BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (course_id) REFERENCES courses(course_id)
-);
-```
-
-이 데이터베이스 설계는 확장성과 유지보수성을 고려했습니다. 새로운 기능(예: 토론방, 인증서 템플릿)을 추가할 때 기존 구조를 크게 변경하지 않고 확장할 수 있습니다. 실제 서비스 운영에서는 이 설계를 바탕으로 애플리케이션 로직을 구현하고, 성능 모니터링을 통해 지속적으로 최적화해야 합니다.
